@@ -66,45 +66,99 @@ class Blockchain:
             block_index += 1
         return True
     
-    def check_master(self,Master,GroupId,ObjectId):
+    def check_master(self,Category,Master,GroupId,ObjectId):
         #previous_block = chain[0]
+        valid=True
+        print(self.transactions)
         block_index = 1
-        print("func starts")
-        valid = True
-        Master_ = []
-        Master_.append(Master)
-        GroupId_ = []
-        GroupId_.append(GroupId)
-        ObjectId_=[]
-        ObjectId_.append(ObjectId)
         while block_index < len(self.chain) :
             block = self.chain[block_index]
-            dic= block["transactions"]
-            l=[sub["Master"] for sub in dic]
-            if((Master_  in l)):
-                valid=False
-                return valid
+            block_transactions= block["transactions"]
+            follows=[following["Category"] for following in block_transactions]
+            if 'Follower' != follows[block_index-1]:
+                temp=[]
+                temp.append(block_transactions[block_index-1])
+                trans=[transacted["Master"] for transacted in temp]
+                Gid=[groupID["GroupId"] for groupID in temp]
+                Oid=[objectID["ObjectId"] for objectID in temp]
+                if((Master  in trans) or (GroupId in Gid) or (ObjectId in Oid) ):
+                    valid=False
+                    return valid
+                temp=[]
             block_index+=1
+         
             
-        trans=self.transactions
-        p=[sub["Master"] for sub in trans]
-        if(Master_ in p ):
-            valid = False
-            return valid
+        follows=[following["Category"] for following in self.transactions]
+        index=0
+        while index < len(self.transactions):
+            if 'Follower' != follows[index]:
+                    temp=[]
+                    temp.append(self.transactions[index])
+                    trans=[transacted["Master"] for transacted in temp]
+                    Gid=[groupID["GroupId"] for groupID in temp]
+                    Oid=[objectID["ObjectId"] for objectID in temp]
+                    if((Master  in trans) or (GroupId in Gid) or (ObjectId in Oid)):
+                        valid=False
+                        return valid
+                    temp=[]
+            index+=1
+        return valid
+    
+    def check_follower(self,Category,Follower,GroupId,ObjectId,PubAddr,Signature):
+        #previous_block = chain[0]
+        valid=True
+        print(self.transactions)
+        block_index = 1
+        while block_index < len(self.chain) :
+            block = self.chain[block_index]
+            block_transactions= block["transactions"]
+            follows=[following["Category"] for following in block_transactions]
+            if 'Master' != follows[block_index-1]:
+                temp=[]
+                temp.append(block_transactions[block_index-1])
+                trans=[transacted["Follower"] for transacted in temp]
+                Gid=[groupID["GroupId"] for groupID in temp]
+                Oid=[objectID["ObjectId"] for objectID in temp]
+                pAddr=[pubADDR["PubAddr"] for pubADDR in temp]
+                sign=[SIGN["Signature"] for SIGN in temp ]
+                if((Follower  in trans) or (GroupId in Gid) or (ObjectId in Oid) or (PubAddr in pAddr) or (Signature in sign)):
+                    valid=False
+                    return valid
+                temp=[]
+            block_index+=1
+         
             
+        follows=[following["Category"] for following in self.transactions]
+        index=0
+        while index < len(self.transactions):
+            if 'Master' != follows[index]:
+                    temp=[]
+                    temp.append(self.transactions[index])
+                    trans=[transacted["Follower"] for transacted in temp]
+                    Gid=[groupID["GroupId"] for groupID in temp]
+                    Oid=[objectID["ObjectId"] for objectID in temp]
+                    pAddr=[pubADDR["PubAddr"] for pubADDR in temp]
+                    sign=[SIGN["Signature"] for SIGN in temp ]
+                    if((Follower  in trans) or (GroupId in Gid) or (ObjectId in Oid) or (PubAddr in pAddr) or (Signature in sign)):
+                        valid=False
+                        return valid
+                    temp=[]
+            index+=1
         return valid
             
     
-    def add_transaction_master(self,Master,GroupId,ObjectId):
-        self.transactions.append({'Master':Master,
+    def add_transaction_master(self,Category,Master,GroupId,ObjectId):
+        self.transactions.append({'Category':Category,
+                                  'Master':Master,
                                   'GroupId':GroupId,
                                   'ObjectId':ObjectId})
             
         previous_block = self.get_lastBlock()
         return previous_block['index']+1
         
-    def add_transaction_follower(self,Follower,GroupId,ObjectId,PubAddr,Signature):
-        self.transactions.append({'Follower':Follower,
+    def add_transaction_follower(self,Category,Follower,GroupId,ObjectId,PubAddr,Signature):
+        self.transactions.append({'Category':Category,
+                                  'Follower':Follower,
                                   'GroupId':GroupId,
                                   'ObjectId':ObjectId,
                                   'PubAddr':PubAddr,
@@ -177,20 +231,25 @@ def get_chain():
 @app.route('/add_transaction' ,methods=['POST'])
 def add_transaction():#taken from postman
     json = request.get_json()
-    transaction_keys_master = ['Master','GroupId','ObjectId']
-    transaction_keys_follower = ['Follower','GroupId','ObjectId','PubAddr','Signature']
+    transaction_keys_master = ['Category','Master','GroupId','ObjectId']
+    transaction_keys_follower = ['Category','Follower','GroupId','ObjectId','PubAddr','Signature']
     if not all(key in json for key in transaction_keys_master):
         if not all(key in json for key in transaction_keys_follower):
             return 'Elements missing',400 
     if all(key in json for key in transaction_keys_master):
-        valid=blockchain.check_master(json['Master'],json['GroupId'],json['ObjectId'])
+        valid=blockchain.check_master(json['Category'],json['Master'],json['GroupId'],json['ObjectId'])
         if valid:
-            index = blockchain.add_transaction_master(json['Master'],json['GroupId'],json['ObjectId'])
+            index = blockchain.add_transaction_master(json['Category'],json['Master'],json['GroupId'],json['ObjectId'])
         else:
             response={'message':'Transaction already added to Block '}
             return jsonify(response),201
     if all(key in json for key in transaction_keys_follower):
-        index = blockchain.add_transaction_follower(json['Follower'],json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
+        valid=blockchain.check_follower(json['Category'],json['Follower'],json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
+        if valid:
+            index = blockchain.add_transaction_follower(json['Category'],json['Follower'],json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
+        else:
+            response={'message':'Transaction already added to Block '}
+            return jsonify(response),201
     response = {'message':f'Transaction added to Block {index}'}
     return jsonify(response),201
 
