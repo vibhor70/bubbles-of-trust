@@ -66,13 +66,54 @@ class Blockchain:
             block_index += 1
         return True
     
-    def add_transaction(self,sender,receiver,amount):
-        self.transactions.append({'sender':sender,
-                                  'receiver':receiver,
-                                  'amount':amount})
+    def check_master(self,Master,GroupId,ObjectId):
+        #previous_block = chain[0]
+        block_index = 1
+        print("func starts")
+        valid = True
+        Master_ = []
+        Master_.append(Master)
+        GroupId_ = []
+        GroupId_.append(GroupId)
+        ObjectId_=[]
+        ObjectId_.append(ObjectId)
+        while block_index < len(self.chain) :
+            block = self.chain[block_index]
+            dic= block["transactions"]
+            l=[sub["Master"] for sub in dic]
+            if((Master_  in l)):
+                valid=False
+                return valid
+            block_index+=1
+            
+        trans=self.transactions
+        p=[sub["Master"] for sub in trans]
+        if(Master_ in p ):
+            valid = False
+            return valid
+            
+        return valid
+            
+    
+    def add_transaction_master(self,Master,GroupId,ObjectId):
+        self.transactions.append({'Master':Master,
+                                  'GroupId':GroupId,
+                                  'ObjectId':ObjectId})
             
         previous_block = self.get_lastBlock()
         return previous_block['index']+1
+        
+    def add_transaction_follower(self,Follower,GroupId,ObjectId,PubAddr,Signature):
+        self.transactions.append({'Follower':Follower,
+                                  'GroupId':GroupId,
+                                  'ObjectId':ObjectId,
+                                  'PubAddr':PubAddr,
+                                  'Signature':Signature})
+            
+        previous_block = self.get_lastBlock()
+        return previous_block['index']+1
+    
+   
     
     def add_node(self,address):
         parsed_url = urlparse(address)
@@ -111,7 +152,7 @@ def mine_block():
     previous_proof =  previous_block['proof']
     proof = blockchain.proof_of_work(previous_proof)
     previous_hash = blockchain.hash(previous_block)
-    blockchain.add_transaction(sender = node_address,receiver = 'vibhor',amount =1 )#coins after getting mined
+    #blockchain.add_transaction(sender = node_address,receiver = 'vibhor',amount =1 )#coins after getting mined
     block = blockchain.create_block(proof,previous_hash)
     response = {'message':'Block Mined',
                 'index':block['index'],
@@ -136,10 +177,20 @@ def get_chain():
 @app.route('/add_transaction' ,methods=['POST'])
 def add_transaction():#taken from postman
     json = request.get_json()
-    transaction_keys = ['sender','receiver','amount']
-    if not all(key in json for key in transaction_keys):
-        return 'Elements missing',400
-    index = blockchain.add_transaction(json['sender'],json['receiver'],json['amount'])
+    transaction_keys_master = ['Master','GroupId','ObjectId']
+    transaction_keys_follower = ['Follower','GroupId','ObjectId','PubAddr','Signature']
+    if not all(key in json for key in transaction_keys_master):
+        if not all(key in json for key in transaction_keys_follower):
+            return 'Elements missing',400 
+    if all(key in json for key in transaction_keys_master):
+        valid=blockchain.check_master(json['Master'],json['GroupId'],json['ObjectId'])
+        if valid:
+            index = blockchain.add_transaction_master(json['Master'],json['GroupId'],json['ObjectId'])
+        else:
+            response={'message':'Transaction already added to Block '}
+            return jsonify(response),201
+    if all(key in json for key in transaction_keys_follower):
+        index = blockchain.add_transaction_follower(json['Follower'],json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
     response = {'message':f'Transaction added to Block {index}'}
     return jsonify(response),201
 
