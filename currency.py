@@ -251,11 +251,11 @@ class Blockchain:
         key = ECC.import_key(open(groupid+'.pem','rt').read())
         signer=DSS.new(key,'fips-186-3')
         signature=signer.sign(h)
-        signature_enc = str(base64.b64encode(signature))
-        return signature_enc
-    
+        #signature_enc = str(base64.b64encode(signature))
+        #return signature_enc
+        return signature
     def verifyticket(self,groupid,objectid,pubaddr,sign):
-        sign= str(base64.b64decode(sign))
+        #sign= str(base64.b64decode(sign))
         signmsg=objectid+groupid+pubaddr
         #h=keccak.new(digest_bits=512)
         #h.update(str.encode(signmsg))
@@ -374,7 +374,7 @@ def add_master():
     return jsonify(response),201
 
 @app.route('/generate_key' ,methods=['GET'])
-def add_master():
+def generate_key():
     key,pkey=blockchain.generatekey("",False)
     response = {"public key":key,
 	'Private key':pkey}
