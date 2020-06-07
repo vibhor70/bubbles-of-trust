@@ -392,12 +392,12 @@ def get_ticket():
         response={"":"group doesnt exists"}
         return jsonify(response),201
     signature=blockchain.generateticket(objectid,groupid,pkey)
-    x=[]
-    x.append(signature)
+   #x=[]
+    #x.append(signature)
     response = {"GroupId":groupid,
 		"ObjectId":objectid,
 		"pubaddr":pkey,
-		"signature":list(x)}
+		"signature":signature}
     return jsonify(response),201
 #running the app
 app.run(host = '0.0.0.0',port = 5000)
