@@ -240,12 +240,9 @@ class Blockchain:
             f.close()
     	#f = open('myprivatekey.pem','rt')
     	#key = ECC.import_key(f.read())
-        return key,pkey
+        return key.export_key(format='PEM'),pkey.export_key(format='PEM')
 
-    def generateticket(self,objectid,groupid,followerpubkey):
-        x=keccak.new(digest_bits=512)
-        x.update(str.encode(followerpubkey))
-        pubaddr=x.hexdigest()
+    def generateticket(self,objectid,groupid,pubaddr):
         #print(pubaddr)
         signmsg=objectid+groupid+pubaddr
     	#h=keccak.new(digest_bits=512)
@@ -255,7 +252,7 @@ class Blockchain:
         signer=DSS.new(key,'fips-186-3')
         signature=signer.sign(h)
         signature_enc = str(base64.b64encode(signature))
-        return pubaddr,signature_enc
+        return signature_enc
     
     def verifyticket(self,groupid,objectid,pubaddr,sign):
         sign= str(base64.b64decode(sign))
@@ -371,17 +368,16 @@ def add_master():
     json = request.get_json()
     node = json.get('GroupId')
     key,pkey=blockchain.generatekey(json['GroupId'],True)
-    z=pkey.export_key(format='PEM')
     response = {"GroupId":node,
-	'Private key for master':z}
+		'private key for master':key,
+	'Public key for master':pkey}
     return jsonify(response),201
 
 @app.route('/generate_key' ,methods=['GET'])
 def add_master():
     key,pkey=blockchain.generatekey("",False)
-    z=pkey.export_key(format='PEM')
-    response = {"public key":key.export_key(format='PEM'),
-	'Private key':z}
+    response = {"public key":key,
+	'Private key':pkey}
     return jsonify(response),201
 
 
@@ -395,10 +391,10 @@ def get_ticket():
     if not path.exists(groupid+'.pem'):
         response={"":"group doesnt exists"}
         return jsonify(response),201
-    pubaddr,signature=blockchain.generateticket(objectid,groupid,pkey)
+    signature=blockchain.generateticket(objectid,groupid,pkey)
     response = {"GroupId":groupid,
 		"ObjectId":objectid,
-		"pubaddr":pubaddr,
+		"pubaddr":pkey,
 		"signature":signature}
     return jsonify(response),201
 #running the app
