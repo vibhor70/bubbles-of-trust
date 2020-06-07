@@ -17,6 +17,7 @@ from Crypto.Hash import keccak
 from Crypto.Hash import SHA256
 from Crypto.Signature import DSS
 import base64
+from os import path
 #building a blockchain
 class Blockchain:
     
@@ -223,6 +224,52 @@ class Blockchain:
             self.chain = longest_chain
             return True
         return False
+    
+    
+    def generatekey(self,groupid,x):
+        key = ECC.generate(curve='P-256')
+        pkey=key.public_key()
+        fa=""+groupid+'.pem'
+        if(x==True):
+            f=open(fa,'wt')
+            f.write(key.export_key(format='PEM'))
+            f.close()
+    		#f=open('mpublickey.pem','wt')
+    		#f.write(pkey.export_key(format='PEM'))
+    		#f.close()
+    	#f = open('myprivatekey.pem','rt')
+    	#key = ECC.import_key(f.read())
+        return key,pkey
+
+    def generateticket(self,objectid,groupid,followerpubkey):
+        x=keccak.new(digest_bits=512)
+        x.update(str.encode(followerpubkey))
+        pubaddr=x.hexdigest()
+        #print(pubaddr)
+        signmsg=objectid+groupid+pubaddr
+    	#h=keccak.new(digest_bits=512)
+    	#h.update(str.encode(signmsg))
+        h=SHA256.new(str.encode(signmsg))
+        key = ECC.import_key(open(groupid+'.pem','rt').read())
+        signer=DSS.new(key,'fips-186-3')
+        signature=signer.sign(h)
+        signature_enc = str(base64.b64encode(signature))
+        return pubaddr,signature_enc
+    
+    def verifyticket(self,groupid,objectid,pubaddr,sign):
+        sign= str(base64.b64decode(sign))
+        signmsg=objectid+groupid+pubaddr
+        #h=keccak.new(digest_bits=512)
+        #h.update(str.encode(signmsg))
+        h=SHA256.new(str.encode(signmsg))
+        key = ECC.import_key(open(groupid+'.pem','rt').read())
+        verifier=DSS.new(key,'fips-186-3')
+        try:
+            verifier.verify(h, sign)
+            return True
+        except ValueError:
+            return False
+
 #mining our blockchain
         
 #create a web app
@@ -280,7 +327,8 @@ def add_transaction():#taken from postman
             return jsonify(response),201
     if all(key in json for key in transaction_keys_follower):
         valid=blockchain.check_follower(json['Category'],json['Follower'],json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
-        if valid:
+        signed_check=blockchain.verifyticket(json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
+        if valid and signed_check:
             index = blockchain.add_transaction_follower(json['Category'],json['Follower'],json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
         else:
             response={'message':'Transaction already added to Block '}
@@ -315,5 +363,32 @@ def replace_chain():
     else :
         response = {'message':'No changes'}
     return jsonify(response),200
+
+
+@app.route('/add_master' ,methods=['POST'])
+def add_master():
+    json = request.get_json()
+    node = json.get('GroupId')
+    key,pkey=blockchain.generatekey(json['GroupId'],True)
+    z=pkey.export_key(format='PEM')
+    response = {"GroupId":node,
+	'Private key for master':z}
+    return jsonify(response),201
+
+@app.route('/get_ticket' ,methods=['POST'])
+def get_ticket():
+    json = request.get_json()
+    groupid = json.get('GroupId')
+    objectid=json.get('ObjectId')
+    pkey=json.get('Pubkey')
+    if not path.exists(groupid+'.pem'):
+        response={"":"group doesnt exists"}
+        return jsonify(response),201
+    pubaddr,signature=blockchain.generateticket(objectid,groupid,pkey)
+    response = {"GroupId":groupid,
+		"ObjectId":objectid,
+		"pubaddr":pubaddr,
+		"signature":signature}
+    return jsonify(response),201
 #running the app
 app.run(host = '0.0.0.0',port = 5000)
