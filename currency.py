@@ -320,6 +320,11 @@ def add_transaction():#taken from postman
         valid=blockchain.check_master(json['Category'],json['Master'],json['GroupId'],json['ObjectId'])
         if valid:
             index = blockchain.add_transaction_master(json['Category'],json['Master'],json['GroupId'],json['ObjectId'])
+            key,pkey=blockchain.generatekey(json['GroupId'],True)
+            response = {"GroupId":node,
+		'private key for master':key,
+	'Public key for master':pkey}
+            return jsonify(response),201
         else:
             response={'message':'Transaction already added to Block '}
             return jsonify(response),201
@@ -361,17 +366,6 @@ def replace_chain():
     else :
         response = {'message':'No changes'}
     return jsonify(response),200
-
-
-@app.route('/add_master' ,methods=['POST'])
-def add_master():
-    json = request.get_json()
-    node = json.get('GroupId')
-    key,pkey=blockchain.generatekey(json['GroupId'],True)
-    response = {"GroupId":node,
-		'private key for master':key,
-	'Public key for master':pkey}
-    return jsonify(response),201
 
 @app.route('/generate_key' ,methods=['GET'])
 def generate_key():
