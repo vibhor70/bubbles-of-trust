@@ -81,7 +81,7 @@ class Blockchain:
             block = self.chain[block_index]
             block_transactions= block["transactions"]
             follows=[following["Category"] for following in block_transactions]
-            if 'Follower' != follows[block_index-1]:
+            if follows[block_index-1]=="Master":
                 temp=[]
                 temp.append(block_transactions[block_index-1])
                 trans=[transacted["Master"] for transacted in temp]
@@ -97,7 +97,7 @@ class Blockchain:
         follows=[following["Category"] for following in self.transactions]
         index=0
         while index < len(self.transactions):
-            if 'Follower' != follows[index]:
+            if follows[index]=="Master":
                     temp=[]
                     temp.append(self.transactions[index])
                     trans=[transacted["Master"] for transacted in temp]
@@ -119,7 +119,7 @@ class Blockchain:
             block = self.chain[block_index]
             block_transactions= block["transactions"]
             follows=[following["Category"] for following in block_transactions]
-            if 'Master' != follows[block_index-1]:
+            if follows[block_index-1]=="Follower":
                 temp=[]
                 temp.append(block_transactions[block_index-1])
                 trans=[transacted["Follower"] for transacted in temp]
@@ -135,10 +135,11 @@ class Blockchain:
          
             
         follows=[following["Category"] for following in self.transactions]
-        #print(follows)
+        print("printing follows\n")
+        print(follows)
         index=0
         while index < len(self.transactions):
-            if 'Master' != follows[index]:
+            if follows[index]=="Follower":
                     temp=[]
                     temp.append(self.transactions[index])
                     trans=[transacted["Follower"] for transacted in temp]
