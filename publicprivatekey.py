@@ -47,6 +47,7 @@ def verifyticket(objectid,groupid,followerpubkey,sign):
 		return True
 	except ValueError:
 		return False
+
 mkey,mpkey=generatekey(True);
 key,pkey=generatekey(False);
 sign=generateticket("1","group1",pkey)
