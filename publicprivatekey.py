@@ -32,21 +32,24 @@ def generateticket(objectid,groupid,pubaddr):
         #sb = base64.b64encode(s)
         #signature_enc = str(base64.b64encode(signature))
         print(signature)
-        print(signmsg)
+        #print(signmsg)
         #print("a\n")
         #print(signature_enc)
         #return signature_enc
         #return sb
-        return signature
+        #print(bytes.decode(signature))
+        return base64.b64encode(signature)
+        #return signature
 
 def verifyticket(groupid,objectid,pubaddr,sign):
+        #sign=sign.decode('base64')
         #print(sign)        
-        #sign= str(base64.b64decode(sign))
+        sign= base64.b64decode(sign)
         #print("a\n")
         #sign = sign.decode('ascii')
         print(sign)
         signmsg=objectid+groupid+pubaddr
-        print(signmsg)
+        #print(signmsg)
         #h=keccak.new(digest_bits=512)
         #h.update(str.encode(signmsg))
         h=SHA256.new(str.encode(signmsg))
@@ -61,5 +64,6 @@ def verifyticket(groupid,objectid,pubaddr,sign):
 mkey,mpkey=generatekey("101",True);
 key,pkey=generatekey("",False);
 sign=generateticket("1","101",pkey)
+print(type(sign))
 print(verifyticket("101","1",pkey,sign))
 

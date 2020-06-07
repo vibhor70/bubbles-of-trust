@@ -253,9 +253,9 @@ class Blockchain:
         signature=signer.sign(h)
         #signature_enc = str(base64.b64encode(signature))
         #return signature_enc
-        return signature
+        return base64.b64encode(signature)
     def verifyticket(self,groupid,objectid,pubaddr,sign):
-        #sign= str(base64.b64decode(sign))
+        sign= base64.b64decode(sign)
         signmsg=objectid+groupid+pubaddr
         #h=keccak.new(digest_bits=512)
         #h.update(str.encode(signmsg))
@@ -392,10 +392,12 @@ def get_ticket():
         response={"":"group doesnt exists"}
         return jsonify(response),201
     signature=blockchain.generateticket(objectid,groupid,pkey)
+    x=[]
+    x.append(signature)
     response = {"GroupId":groupid,
 		"ObjectId":objectid,
 		"pubaddr":pkey,
-		"signature":signature}
+		"signature":list(x)}
     return jsonify(response),201
 #running the app
 app.run(host = '0.0.0.0',port = 5000)
