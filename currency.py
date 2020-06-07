@@ -235,7 +235,7 @@ class Blockchain:
             f=open(fa,'wt')
             f.write(key.export_key(format='PEM'))
             f.close()
-            f=open('mpublickey.pem','wt')
+            f=open(fap,'wt')
             f.write(pkey.export_key(format='PEM'))
             f.close()
     	#f = open('myprivatekey.pem','rt')
@@ -375,6 +375,16 @@ def add_master():
     response = {"GroupId":node,
 	'Private key for master':z}
     return jsonify(response),201
+
+@app.route('/generate_key' ,methods=['GET'])
+def add_master():
+    key,pkey=blockchain.generatekey("",false)
+    z=pkey.export_key(format='PEM')
+    response = {"public key":key.export_key(format='PEM'),
+	'Private key':z}
+    return jsonify(response),201
+
+
 
 @app.route('/get_ticket' ,methods=['POST'])
 def get_ticket():
