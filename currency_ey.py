@@ -258,6 +258,7 @@ def generateticket(objectid,groupid,followerpubkey):
     return pubaddr,signature_enc
 
 def verifyticket(objectid,groupid,pubaddr,sign):
+    sign= str(base64.b64decode(sign))
     signmsg=objectid+groupid+pubaddr
     #h=keccak.new(digest_bits=512)
     #h.update(str.encode(signmsg))
