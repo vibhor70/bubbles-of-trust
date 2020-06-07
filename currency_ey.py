@@ -196,6 +196,36 @@ class Blockchain:
             self.chain = longest_chain
             return True
         return False
+    def check_message(self,Category,GroupId,Sender,Receiver):
+        valid=True
+
+        block_index = 1
+        while block_index < len(self.chain) :
+            block = self.chain[block_index]
+            block_transactions= block["transactions"]
+            follows=[following["GroupId"] for following in block_transactions]
+            print(follows)
+            print("bc")
+            if GroupId in follows:
+                return valid
+            block_index+=1
+        return False 
+
+        follows=[following["GroupId"] for following in self.transactions]
+        print(follows)
+        print("transaction")
+        if GroupId in follows:
+            return valid
+        return False
+
+    def add_transaction_message(self,Category,GroupId,Sender,Receiver):
+        self.transactions.append({'Category':Category,
+                                 'GroupId':GroupId,
+                                 'Sender':Sender,
+                                 'Receiver':Receiver
+                                 })
+        previous_block = self.get_lastBlock()
+        return previous_block['index']+1
 
 def generatekey(groupid,x):
     key = ECC.generate(curve='P-256')
@@ -226,8 +256,6 @@ def generateticket(objectid,groupid,followerpubkey):
     signature=signer.sign(h)
     signature_enc = str(base64.b64encode(signature))
     return pubaddr,signature_enc
-
-
 
 def verifyticket(objectid,groupid,pubaddr,sign):
     signmsg=objectid+groupid+pubaddr
@@ -283,12 +311,13 @@ def get_chain():
 @app.route('/add_transaction' ,methods=['POST'])
 def add_transaction():#taken from postman
     json = request.get_json()
-    print(json)
+    transaction_keys_message = ['Category','GroupId','Sender','Receiver']
     transaction_keys_master = ['Category','Master','GroupId','ObjectId']
     transaction_keys_follower = ['Category','Follower','GroupId','ObjectId','PubAddr','Signature']
     if not all(key in json for key in transaction_keys_master):
         if not all(key in json for key in transaction_keys_follower):
-            return 'Elements missing',400 
+            if not all(key in json for key in transaction_keys_message):
+                return 'Elements missing',400 
     if all(key in json for key in transaction_keys_master):
         valid=blockchain.check_master(json['Category'],json['Master'],json['GroupId'],json['ObjectId'])
         if valid:
@@ -302,6 +331,13 @@ def add_transaction():#taken from postman
             index = blockchain.add_transaction_follower(json['Category'],json['Follower'],json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
         else:
             response={'message':'Transaction already added to Block '}
+            return jsonify(response),201
+    if all(key in json for key in transaction_keys_message):
+        valid=blockchain.check_message(json['Category'],json['GroupId'],json['Sender'],json['Receiver'])
+        if valid:
+            index = blockchain.add_transaction_message(json['Category'],json['GroupId'],json['Sender'],json['Receiver'])
+        else:
+            response={'message':'GroupId does not exits you scammer '}
             return jsonify(response),201
     response = {'message':f'Transaction added to Block {index}'}
     return jsonify(response),201
