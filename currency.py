@@ -388,8 +388,8 @@ def generate_key():
 def get_ticket():
     json = request.get_json()
     groupid = json.get('GroupId')
-    objectid=json.get('ObjectId')
-    pkey=json.get('Pubkey')
+    objectid = json.get('ObjectId')
+    key,pkey = blockchain.generatekey("",False)
     if not path.exists(groupid+'.pem'):
         response={"":"group doesnt exists"}
         return jsonify(response),201
