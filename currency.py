@@ -241,7 +241,7 @@ class Blockchain:
     	#key = ECC.import_key(f.read())
         return key,pkey
 
-    def generateticket(self,objectid,groupid,followerpubkey):
+    def generateticket(self,objectid,groupid,followerpubkey,pkey):
         x=keccak.new(digest_bits=512)
         x.update(str.encode(followerpubkey))
         pubaddr=x.hexdigest()
@@ -250,7 +250,7 @@ class Blockchain:
     	#h=keccak.new(digest_bits=512)
     	#h.update(str.encode(signmsg))
         h=SHA256.new(str.encode(signmsg))
-        key = ECC.import_key(open(groupid+'.pem','rt').read())
+        key = ECC.import_key(pkey)
         signer=DSS.new(key,'fips-186-3')
         signature=signer.sign(h)
         signature_enc = str(base64.b64encode(signature))
@@ -313,7 +313,7 @@ def add_transaction():#taken from postman
     json = request.get_json()
     transaction_keys_message = ['Category','GroupId','Sender','Receiver']
     transaction_keys_master = ['Category','Master','GroupId','ObjectId']
-    transaction_keys_follower = ['Category','Follower','GroupId','ObjectId','PubAddr','Signature']
+    transaction_keys_follower = ['Category','Follower','GroupId','ObjectId','PubAddr','Signature','pkey']
     if not all(key in json for key in transaction_keys_master):
         if not all(key in json for key in transaction_keys_follower):
             if not all(key in json for key in transaction_keys_message):
@@ -327,7 +327,7 @@ def add_transaction():#taken from postman
             return jsonify(response),201
     if all(key in json for key in transaction_keys_follower):
         valid=blockchain.check_follower(json['Category'],json['Follower'],json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
-        signed_check=blockchain.verifyticket(json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
+        signed_check=blockchain.verifyticket(json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'],json['pkey'])
         if valid and signed_check:
             index = blockchain.add_transaction_follower(json['Category'],json['Follower'],json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
         else:
