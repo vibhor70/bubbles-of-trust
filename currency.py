@@ -230,18 +230,19 @@ class Blockchain:
         key = ECC.generate(curve='P-256')
         pkey=key.public_key()
         fa=""+groupid+'.pem'
+        fap="p"+groupid+'.pem'
         if(x==True):
             f=open(fa,'wt')
             f.write(key.export_key(format='PEM'))
             f.close()
-    		#f=open('mpublickey.pem','wt')
-    		#f.write(pkey.export_key(format='PEM'))
-    		#f.close()
+            f=open('mpublickey.pem','wt')
+            f.write(pkey.export_key(format='PEM'))
+            f.close()
     	#f = open('myprivatekey.pem','rt')
     	#key = ECC.import_key(f.read())
         return key,pkey
 
-    def generateticket(self,objectid,groupid,followerpubkey,pkey):
+    def generateticket(self,objectid,groupid,followerpubkey):
         x=keccak.new(digest_bits=512)
         x.update(str.encode(followerpubkey))
         pubaddr=x.hexdigest()
@@ -250,7 +251,7 @@ class Blockchain:
     	#h=keccak.new(digest_bits=512)
     	#h.update(str.encode(signmsg))
         h=SHA256.new(str.encode(signmsg))
-        key = ECC.import_key(pkey)
+        key = ECC.import_key(open(groupid+'.pem','rt').read())
         signer=DSS.new(key,'fips-186-3')
         signature=signer.sign(h)
         signature_enc = str(base64.b64encode(signature))
@@ -262,7 +263,7 @@ class Blockchain:
         #h=keccak.new(digest_bits=512)
         #h.update(str.encode(signmsg))
         h=SHA256.new(str.encode(signmsg))
-        key = ECC.import_key(open(groupid+'.pem','rt').read())
+        key = ECC.import_key(open("p"+groupid+'.pem','rt').read())
         verifier=DSS.new(key,'fips-186-3')
         try:
             verifier.verify(h, sign)
@@ -313,7 +314,7 @@ def add_transaction():#taken from postman
     json = request.get_json()
     transaction_keys_message = ['Category','GroupId','Sender','Receiver']
     transaction_keys_master = ['Category','Master','GroupId','ObjectId']
-    transaction_keys_follower = ['Category','Follower','GroupId','ObjectId','PubAddr','Signature','pkey']
+    transaction_keys_follower = ['Category','Follower','GroupId','ObjectId','PubAddr','Signature']
     if not all(key in json for key in transaction_keys_master):
         if not all(key in json for key in transaction_keys_follower):
             if not all(key in json for key in transaction_keys_message):
@@ -327,7 +328,7 @@ def add_transaction():#taken from postman
             return jsonify(response),201
     if all(key in json for key in transaction_keys_follower):
         valid=blockchain.check_follower(json['Category'],json['Follower'],json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
-        signed_check=blockchain.verifyticket(json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'],json['pkey'])
+        signed_check=blockchain.verifyticket(json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
         if valid and signed_check:
             index = blockchain.add_transaction_follower(json['Category'],json['Follower'],json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
         else:
