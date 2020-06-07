@@ -231,6 +231,7 @@ def get_chain():
 @app.route('/add_transaction' ,methods=['POST'])
 def add_transaction():#taken from postman
     json = request.get_json()
+    print(json)
     transaction_keys_master = ['Category','Master','GroupId','ObjectId']
     transaction_keys_follower = ['Category','Follower','GroupId','ObjectId','PubAddr','Signature']
     if not all(key in json for key in transaction_keys_master):
