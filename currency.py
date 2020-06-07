@@ -135,6 +135,7 @@ class Blockchain:
          
             
         follows=[following["Category"] for following in self.transactions]
+        #print(follows)
         index=0
         while index < len(self.transactions):
             if 'Master' != follows[index]:
@@ -396,8 +397,8 @@ def get_ticket():
     #x.append(signature)
     response = {"GroupId":groupid,
 		"ObjectId":objectid,
-		"pubaddr":pkey,
-		"signature":signature}
+		"PubAddr":pkey,
+		"Signature":signature}
     return jsonify(response),201
 #running the app
 app.run(host = '0.0.0.0',port = 5000)
