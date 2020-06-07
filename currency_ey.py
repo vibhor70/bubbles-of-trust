@@ -228,6 +228,20 @@ def generateticket(objectid,groupid,followerpubkey):
     return pubaddr,signature_enc
 
 
+
+def verifyticket(objectid,groupid,pubaddr,sign):
+    signmsg=objectid+groupid+pubaddr
+    #h=keccak.new(digest_bits=512)
+    #h.update(str.encode(signmsg))
+    h=SHA256.new(str.encode(signmsg))
+    key = ECC.import_key(open(groupid+'.pem','rt').read())
+    verifier=DSS.new(key,'fips-186-3')
+    try:
+        verifier.verify(h, sign)
+        return True
+    except ValueError:
+        return False
+
 #mining our blockchain
         
 #create a web app
