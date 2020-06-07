@@ -8,15 +8,15 @@ def getchain():
 
 def addtransaction():
 	Url="http://127.0.0.1:5000/add_transaction"
-	Params={'Category':"1",'Master':"Master1",'GroupId':"group1",'ObjectId':"object1"}
-	r=requests.post(url=Url,data=Params)
+	Params={'Category':"Master",'Master':"samsung",'GroupId':"101",'ObjectId':"object1"}
+	r=requests.post(url=Url,json=Params)
 	data=r.text
 	print(data)
 
 def connectnode():
 	Url="http://127.0.0.1:5000/connect_node"
 	Params={'nodes':"[127.0.0.1:5001]"}
-	r=requests.post(url=Url,data=Params)
+	r=requests.post(url=Url,json=Params)
 	data=r.text
 	print(data)
 
@@ -34,7 +34,7 @@ def replacechain():
 	data=r.json()
 	print(data)
 
-#addtransaction()
+addtransaction()
 getchain()
 mineblock()
 #connectnode()
