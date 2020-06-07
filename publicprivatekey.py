@@ -31,18 +31,24 @@ def generateticket(objectid,groupid,pubaddr):
         #s = signature.encode('ascii')
         #sb = base64.b64encode(s)
         #signature_enc = str(base64.b64encode(signature))
-        print(signature)
+        #print(signature)
         #print(signmsg)
         #print("a\n")
         #print(signature_enc)
         #return signature_enc
         #return sb
         #print(bytes.decode(signature))
-        return base64.b64encode(signature)
+        x=base64.b64encode(signature)
+        print(x)
+        return x.decode()
+        #return str(x)
         #return signature
 
 def verifyticket(groupid,objectid,pubaddr,sign):
         #sign=sign.decode('base64')
+        sign = bytes(sign,encoding='utf-8')
+        print(sign)
+        #sign=str.encode(sign)        
         #print(sign)        
         sign= base64.b64decode(sign)
         #print("a\n")

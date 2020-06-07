@@ -255,9 +255,9 @@ class Blockchain:
         signature=signer.sign(h)
         #signature_enc = str(base64.b64encode(signature))
         #return signature_enc
-        return base64.b64encode(signature)
+        return base64.b64encode(signature).decode()
     def verifyticket(self,groupid,objectid,pubaddr,sign):
-        sign= base64.b64decode(sign)
+        sign= base64.b64decode(bytes(sign,encoding='utf-8'))
         signmsg=objectid+groupid+pubaddr
         #h=keccak.new(digest_bits=512)
         #h.update(str.encode(signmsg))
