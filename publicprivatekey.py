@@ -16,37 +16,35 @@ def generatekey(x):
 	#f = open('myprivatekey.pem','rt')
 	#key = ECC.import_key(f.read())
 	return key,pkey
-
-def generateticket(objectid,groupid,followerpubkey):
-	x=keccak.new(digest_bits=512)
-	x.update(str.encode(followerpubkey.export_key(format='PEM')))
-	pubaddr=x.hexdigest()
-	print(pubaddr)
-	signmsg=objectid+groupid+pubaddr
-	#h=keccak.new(digest_bits=512)
-	#h.update(str.encode(signmsg))
-	h=SHA256.new(str.encode(signmsg))
-	key = ECC.import_key(open('mprivatekey.pem','rt').read())
-	signer=DSS.new(key,'fips-186-3')
-	signature=signer.sign(h)
-	return signature
-
-def verifyticket(objectid,groupid,followerpubkey,sign):
-	x=keccak.new(digest_bits=512)
-	x.update(str.encode(followerpubkey.export_key(format='PEM')))
-	pubaddr=x.hexdigest()
-	print(pubaddr)
-	signmsg=objectid+groupid+pubaddr
-	#h=keccak.new(digest_bits=512)
-	#h.update(str.encode(signmsg))
-	h=SHA256.new(str.encode(signmsg))
-	key = ECC.import_key(open('mpublickey.pem','rt').read())
-	verifier=DSS.new(key,'fips-186-3')
-	try:
-		verifier.verify(h, sign)
-		return True
-	except ValueError:
-		return False
+  
+def generateticket(self,objectid,groupid,followerpubkey):
+        x=keccak.new(digest_bits=512)
+        x.update(str.encode(followerpubkey))
+        pubaddr=x.hexdigest()
+        #print(pubaddr)
+        signmsg=objectid+groupid+pubaddr
+    	#h=keccak.new(digest_bits=512)
+    	#h.update(str.encode(signmsg))
+        h=SHA256.new(str.encode(signmsg))
+        key = ECC.import_key(open(groupid+'.pem','rt').read())
+        signer=DSS.new(key,'fips-186-3')
+        signature=signer.sign(h)
+        signature_enc = str(base64.b64encode(signature))
+        return pubaddr,signature_enc
+    
+def verifyticket(self,groupid,objectid,pubaddr,sign):
+        sign= str(base64.b64decode(sign))
+        signmsg=objectid+groupid+pubaddr
+        #h=keccak.new(digest_bits=512)
+        #h.update(str.encode(signmsg))
+        h=SHA256.new(str.encode(signmsg))
+        key = ECC.import_key(open("p"+groupid+'.pem','rt').read())
+        verifier=DSS.new(key,'fips-186-3')
+        try:
+            verifier.verify(h, sign)
+            return True
+        except ValueError:
+            return False
 
 mkey,mpkey=generatekey(True);
 key,pkey=generatekey(False);

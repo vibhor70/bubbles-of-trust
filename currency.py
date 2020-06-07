@@ -378,7 +378,7 @@ def add_master():
 
 @app.route('/generate_key' ,methods=['GET'])
 def add_master():
-    key,pkey=blockchain.generatekey("",false)
+    key,pkey=blockchain.generatekey("",False)
     z=pkey.export_key(format='PEM')
     response = {"public key":key.export_key(format='PEM'),
 	'Private key':z}
