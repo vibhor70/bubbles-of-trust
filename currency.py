@@ -321,7 +321,8 @@ def add_transaction():#taken from postman
         if valid:
             index = blockchain.add_transaction_master(json['Category'],json['Master'],json['GroupId'],json['ObjectId'])
             key,pkey=blockchain.generatekey(json['GroupId'],True)
-            response = {"GroupId":node,
+            x=json['GroupId']
+            response = {"GroupId":x,
 		'private key for master':key,
 	'Public key for master':pkey}
             return jsonify(response),201
@@ -330,7 +331,12 @@ def add_transaction():#taken from postman
             return jsonify(response),201
     if all(key in json for key in transaction_keys_follower):
         valid=blockchain.check_follower(json['Category'],json['Follower'],json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
+        #valid=True
         signed_check=blockchain.verifyticket(json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
+        #signed_check=True
+        if not signed_check:
+            response={'message':'Wrong Token '}
+            return jsonify(response),201
         if valid and signed_check:
             index = blockchain.add_transaction_follower(json['Category'],json['Follower'],json['GroupId'],json['ObjectId'],json['PubAddr'],json['Signature'])
         else:
